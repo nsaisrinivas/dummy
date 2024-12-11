@@ -1,0 +1,91 @@
+************* STEPS TO START ZOOKEEPER AND KAFKA SERVER *******************
+
+STEP-1 (to start zookeeper) : open cmd at kafka folder in filemanager i.e., c:/kafka 
+give this command for windows -> .\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+STEP-2 (to start kafka server) : open cmd at kafka folder in filemanager i.e., c:/kafka
+give this command for windows -> .\bin\windows\kafka-server-start.bat .\config\server.properties
+
+[DEFAULT PORT NUMBER FOR KAFKA IS localhost:9092] above commands are just like folder path easy to remember.
+
+STEP-3 (to create a topic) : kafka-topic.bat --create --bootstrap-server localhost:9092 --topic <<topicname(new name)>>
+
+STEP-4 (to start kafka producer) : open cmd at kafka/bin/windows folder in filemanager
+give this command -> kafka-console-producer.bat --broker-list localhost:9092 --topic <<topicname(already created topic name)>> 
+
+STEP-5 (to start kafka consumer) : open cmd at kafka/bin/windows folder in filemanager
+give this command -> kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic <<topicname(already created topic name)>> --from-beginning
+
+=> in step5 command --from-beginning is optional use only if you want to see all the messages it consumed or else no need.
+=> in all above commands .bat are files present in the filemanager just going to that file path and running them is all we are doing through these commands.
+=> always first two steps are important to start zookeeper and kafka server.
+
+
+to achieve *KAFKA VIA SPRINGBOOT* use below 
+
+STEP-1: start zookeeper and kafka server using above shown step1 and step2 commands.
+STEP-2: add "spring for apache kafka" dependency 
+STEP-3: 
+add below properties in application.properties file.
+
+//======== BELOW PROPERTIES ARE FOR KAFKA CONSUMER===========
+
+spring.kafka.consumer.bootstrap-servers= localhost:9092
+spring.kafka.consumer.group-id: myGroup
+spring.kafka.consumer.auto-offset-reset= earliest
+ //to Receive String message use below for json replace StringDeserailizer to JsonDeserializer
+spring.kafka.consumer.key-deserializer = org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.value-deserializer = org.apache.kafka.common.serialization.StringDeserializer 
+
+
+//======== BELOW PROPERTIES ARE FOR KAFKA PRODUCER ===============
+
+spring.kafka.producer.bootstrap-servers= localhost:9092
+//to publish String message use below to json replace StringSerializer to JsonDeserializer
+spring.kafka.producer.key-serializer= org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer= org.apache.kafka.common.serialization.StringSerializer
+
+STEP-4: for producer 
+	to create a topic using spring boot
+
+	@Configuration
+	public class KafkaConfig {
+
+	@Bean
+	public NewTopic topic() {
+		return TopicBuilder.name("<<topic name>>").build();
+	}
+	}
+
+	to publish message need to use "KAFKA TEMPLATE".
+
+	@Service
+	public class KafkaProducer {
+
+		private static final Logger logger= LoggerFactory.getLogger(KafkaProducer.class); //logger to log message
+
+		@Autowired
+		private KafkaTemplate< String, String> template; //used to publish messages to kafka topic
+	
+		public void sendMessage(String msg) {
+			logger.info(String.format("message sent: %s", msg));
+			template.send("test",msg);
+		}
+	}
+
+STEP-5: for kafka consumer
+
+	to consume messages from kafka topic "@KafkaListener" is used
+	
+	//@KafkaListener(topics = "<<topic name>>", groupId = "myGroup") use to listen/consume messages from kafka topic 									need to pass the topic name from which it wanted 									to listen as a parameter and its groupid which is 									mentioned in properties file.
+
+	@Service
+	public class KafkaConsumer {
+
+		private static final Logger logger= LoggerFactory.getLogger(KafkaConsumer.class);
+	
+		@KafkaListener(topics = "test", groupId = "myGroup") 
+		public void consumes(String message) {
+			logger.info(String.format("message consumed: %s", message));
+		}
+	}

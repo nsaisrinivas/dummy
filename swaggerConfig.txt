@@ -1,0 +1,47 @@
+
+***********STEPS TO INCLUDE SWAGGER IN SPRINGBOOT APPLICATION**************
+
+STEP-1: Add Dependency in pom.xml
+
+	<dependencies>
+	    <!-- Springdoc OpenAPI dependency -->
+	    <dependency>
+	        <groupId>org.springdoc</groupId>
+	        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+	        <version>2.1.0</version>
+	    </dependency>
+	</dependencies>
+
+=> step1 is enough to add swagger in springboot application. If need customization follow below steps.
+  VISIT http://localhost:8080/swagger-ui/index.html or http://localhost:8080/swagger-ui.html after STEP-1.
+
+STEP-2: write a configuration class which return OpenAPI object
+
+	@Bean 
+	OpenAPI customeConfiguration(){
+		return new OpenAPI()  
+				// **** to change the main title of swagger ui page ****
+				.info(
+						new Info().title("swagger Implementation")
+						.description("Swagger using Spring boot")
+						)
+						
+				// *** to Add servers that are visible in swagger UI ****
+				.servers(
+						Arrays.asList(new Server().url("http://localhost:8080").description("local"),
+									  new Server().url("http://localhost:8080").description("live"))
+						);
+		
+		//*****BELOW CODE IS TO IMPLEMENT SECURITY USING JWT on Every Api IN SWAGGER UI *****//
+		
+//				.addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+//				.components(new Components().addSecuritySchemes("bearerAuth", new SecurityScheme()
+//						.type(SecurityScheme.Type.HTTP)
+//						.scheme("bearer")
+//						.bearerFormat("JWT")
+//						.in(SecurityScheme.In.HEADER)
+//						.name("Authorization")));
+
+*****below tags are useful to provide the purpose of the API'S for better user Experience******
+@Tag -> this is a class level tag helps to provide customized name for Api's present in that particular class.
+@Operation(summary="") -> this is method level tag helps to provide summary of that particular method.
